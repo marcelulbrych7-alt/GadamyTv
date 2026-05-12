@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { connectSocket } from "../socket/socket";
+import { SERVER_URL, connectSocket } from "../socket/socket";
 
 const API = "https://gadamytv-backend.onrender.com";
 

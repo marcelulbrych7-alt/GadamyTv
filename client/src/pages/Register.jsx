@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { SERVER_URL, connectSocket } from "../socket/socket";
 
 const API = `http://${window.location.hostname}:5000`;
 
