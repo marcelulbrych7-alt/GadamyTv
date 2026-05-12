@@ -4,7 +4,7 @@ function About() {
       <h1 className="title">O nas</h1>
 
       <div className="card">
-        Tutaj wpiszesz informacje o Gadamy.TV.
+        Tutaj będą informacje o Gadamy.TV
       </div>
     </div>
   );
