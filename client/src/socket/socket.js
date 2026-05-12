@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const SERVER_URL = `http://${window.location.hostname}:5000`;
+const SERVER_URL = "https://gadamytv-backend.onrender.com";
 
 const socket = io(SERVER_URL, {
   autoConnect: false,
