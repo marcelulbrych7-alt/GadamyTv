@@ -9,6 +9,9 @@ const server = http.createServer(app);
 
 app.use(cors());
 app.use(express.json({ limit: "20mb" }));
+app.get("/", (req, res) => {
+  res.send("GadamyTV backend działa");
+});
 
 const io = new Server(server, {
   cors: {

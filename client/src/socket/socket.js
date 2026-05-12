@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const SERVER_URL = "https://gadamytv-backend.onrender.com";
+export const SERVER_URL = "https://gadamytv-backend.onrender.com";
 
 const socket = io(SERVER_URL, {
   autoConnect: false,
