@@ -1,0 +1,124 @@
+{
+  "users": [
+    {
+      "id": "6da1ch400s61778610246033",
+      "nick": "B3zsensuu",
+      "name": "Marcel",
+      "age": "18",
+      "password": "1234"
+    },
+    {
+      "id": "td8alikm7qa1778611375098",
+      "nick": "B3zsensuu1",
+      "name": "Marcel ",
+      "age": "19",
+      "password": "1234"
+    },
+    {
+      "id": "cdpg3vbcgsb1778612402261",
+      "nick": "Tomsky",
+      "name": "Tomek",
+      "age": "19",
+      "password": "asdfghjk"
+    }
+  ],
+  "friends": {
+    "6da1ch400s61778610246033": [
+      "td8alikm7qa1778611375098",
+      "cdpg3vbcgsb1778612402261"
+    ],
+    "td8alikm7qa1778611375098": [
+      "6da1ch400s61778610246033"
+    ],
+    "cdpg3vbcgsb1778612402261": [
+      "6da1ch400s61778610246033"
+    ]
+  },
+  "history": [
+    {
+      "id": "4jqe94ajoke1778611706057",
+      "type": "video",
+      "users": [
+        "td8alikm7qa1778611375098",
+        "6da1ch400s61778610246033"
+      ],
+      "partnerNames": {
+        "td8alikm7qa1778611375098": "B3zsensuu",
+        "6da1ch400s61778610246033": "B3zsensuu1"
+      },
+      "message": "Rozpoczęto rozmowę",
+      "date": "2026-05-12T18:48:26.057Z"
+    },
+    {
+      "id": "tazzy61f7z1778611718283",
+      "type": "video",
+      "users": [
+        "6da1ch400s61778610246033",
+        "td8alikm7qa1778611375098"
+      ],
+      "partnerNames": {
+        "6da1ch400s61778610246033": "B3zsensuu1",
+        "td8alikm7qa1778611375098": "B3zsensuu"
+      },
+      "message": "Rozpoczęto rozmowę",
+      "date": "2026-05-12T18:48:38.283Z"
+    },
+    {
+      "id": "k3fyz6hcfx1778611764175",
+      "type": "video",
+      "users": [
+        "td8alikm7qa1778611375098",
+        "6da1ch400s61778610246033"
+      ],
+      "partnerNames": {
+        "td8alikm7qa1778611375098": "B3zsensuu",
+        "6da1ch400s61778610246033": "B3zsensuu1"
+      },
+      "message": "Rozpoczęto rozmowę",
+      "date": "2026-05-12T18:49:24.175Z"
+    },
+    {
+      "id": "92ykuf6e8t51778612415242",
+      "type": "video",
+      "users": [
+        "cdpg3vbcgsb1778612402261",
+        "6da1ch400s61778610246033"
+      ],
+      "partnerNames": {
+        "cdpg3vbcgsb1778612402261": "B3zsensuu",
+        "6da1ch400s61778610246033": "Tomsky"
+      },
+      "message": "Rozpoczęto rozmowę",
+      "date": "2026-05-12T19:00:15.242Z"
+    },
+    {
+      "id": "ixqhu41exgo1778612439507",
+      "type": "video",
+      "users": [
+        "cdpg3vbcgsb1778612402261",
+        "6da1ch400s61778610246033"
+      ],
+      "partnerNames": {
+        "cdpg3vbcgsb1778612402261": "B3zsensuu",
+        "6da1ch400s61778610246033": "Tomsky"
+      },
+      "message": "Rozpoczęto rozmowę",
+      "date": "2026-05-12T19:00:39.507Z"
+    },
+    {
+      "id": "lnehy74puns1778612714952",
+      "type": "video",
+      "users": [
+        "td8alikm7qa1778611375098",
+        "6da1ch400s61778610246033"
+      ],
+      "partnerNames": {
+        "td8alikm7qa1778611375098": "B3zsensuu",
+        "6da1ch400s61778610246033": "B3zsensuu1"
+      },
+      "message": "Rozpoczęto rozmowę",
+      "date": "2026-05-12T19:05:14.952Z"
+    }
+  ],
+  "privateMessages": []
+}
