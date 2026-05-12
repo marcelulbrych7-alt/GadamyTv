@@ -24,7 +24,7 @@ function Navbar() {
         <Link to="/">Rozmowy</Link>
         <Link to="/chat">Chat</Link>
         <Link to="/historia">Historia</Link>
-        <Link to="/onas">O nas</Link>
+        
       </div>
 
       <div className="logo">Gadamy.TV</div>

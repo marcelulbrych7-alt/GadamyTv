@@ -8,7 +8,7 @@ import Historia from "./pages/Historia";
 import Znajomi from "./pages/Znajomi";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import About from "./pages/About";
+
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function App() {
         <Route path="/znajomi" element={<Znajomi />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/onas" element={<About />} />
+        
       </Routes>
     </BrowserRouter>
   );
