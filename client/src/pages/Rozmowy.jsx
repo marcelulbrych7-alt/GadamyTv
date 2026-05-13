@@ -7,7 +7,7 @@ function Rozmowy() {
   const peerRef = useRef(null);
   const streamRef = useRef(null);
 
-  const [status, setStatus] = useState("Kliknij Start, aby uruchomić kamerkę");
+  const [status, setStatus] = useState("Kliknij Start, aby rozpocząć");
   const [partner, setPartner] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
 
@@ -24,23 +24,13 @@ function Rozmowy() {
         myVideo.current.srcObject = stream;
       }
 
-      localStorage.setItem("cameraPermission", "granted");
-
       setCameraReady(true);
-      setStatus("Kamerka i mikrofon działają ✅");
+      setStatus("Kamerka i mikrofon działają");
 
       return stream;
     } catch (err) {
       console.log(err);
-
-      localStorage.setItem("cameraPermission", "denied");
-
-      setStatus("Brak dostępu do kamerki lub mikrofonu ❌");
-
-      alert(
-        "Musisz zezwolić na dostęp do kamerki i mikrofonu w przeglądarce."
-      );
-
+      setStatus("Brak dostępu do kamerki lub mikrofonu");
       return null;
     }
   };
@@ -96,7 +86,6 @@ function Rozmowy() {
 
     if (!streamRef.current) {
       const stream = await startCamera();
-
       if (!stream) return;
     }
 
@@ -117,6 +106,7 @@ function Rozmowy() {
     setPartner(null);
     setStatus("Szukanie nowej osoby...");
     socket.emit("next", "video");
+    socket.emit("find-video");
   };
 
   const stop = () => {
@@ -136,26 +126,16 @@ function Rozmowy() {
   };
 
   const addFriend = () => {
-  if (!partner) {
-    alert("Najpierw połącz się z rozmówcą");
-    return;
-  }
+    if (!partner) {
+      alert("Najpierw połącz się z rozmówcą");
+      return;
+    }
 
-  socket.emit("send-friend-request", partner.id);
-  alert("Wysłano zaproszenie do znajomych");
-};
-
-    socket.emit("add-friend", partner.id);
-    alert("Dodano do znajomych");
+    socket.emit("send-friend-request", partner.id);
+    alert("Wysłano zaproszenie do znajomych");
   };
 
   useEffect(() => {
-    const savedPermission = localStorage.getItem("cameraPermission");
-
-    if (savedPermission === "granted") {
-      startCamera();
-    }
-
     socket.on("video-searching", () => {
       setStatus("Szukanie aktywnej osoby...");
     });
@@ -280,6 +260,6 @@ function Rozmowy() {
       </div>
     </div>
   );
-
+}
 
 export default Rozmowy;
