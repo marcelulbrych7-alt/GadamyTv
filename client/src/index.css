@@ -1,22 +1,536 @@
-.discordStyle {
-  background: #0f172a;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.discordSidebar {
-  width: 340px;
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: #0b1120;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.navbar {
+  width: 100%;
+  min-height: 86px;
+  background: rgba(2, 6, 23, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 16px 28px;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brandLogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoMark {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #38bdf8, #7c3aed, #f97316);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.35);
+}
+
+.brandName {
+  font-size: 30px;
+  font-weight: 900;
+  color: white;
+}
+
+.brandSlogan {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.navLinks {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLinks a {
+  background: rgba(30, 41, 59, 0.75);
+  padding: 11px 15px;
+  border-radius: 999px;
+  font-weight: bold;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.navLinks a:hover {
+  background: #2563eb;
+}
+
+.authButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.authButtons a,
+.authButtons button,
+.userBadge {
+  background: rgba(30, 41, 59, 0.75);
+  color: white;
+  padding: 11px 15px;
+  border-radius: 999px;
+  font-weight: bold;
+}
+
+.role-owner {
+  background: linear-gradient(135deg, #f97316, #dc2626);
+}
+
+.role-admin {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.role-support {
+  background: linear-gradient(135deg, #16a34a, #0f766e);
+}
+
+.page {
+  min-height: calc(100vh - 86px);
+  padding: 34px;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.14), transparent 30%),
+    radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.13), transparent 28%),
+    radial-gradient(circle at 50% 90%, rgba(249, 115, 22, 0.10), transparent 28%),
+    #0b1120;
+}
+
+.title {
+  text-align: center;
+  font-size: 44px;
+  margin-bottom: 20px;
+}
+
+.status {
+  text-align: center;
+  color: #93c5fd;
+  font-size: 18px;
+  margin-bottom: 25px;
+}
+
+.videoWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.videoCard {
+  width: 100%;
+  min-width: 0;
+}
+
+.videoLabel {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #cbd5e1;
+}
+
+.videoBox {
+  width: 100%;
+  height: min(34vw, 520px);
+  min-height: 260px;
+  background: black;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+}
+
+.videoBox video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 25px;
+  flex-wrap: wrap;
+}
+
+.buttons button,
+.btn {
+  color: white;
+  padding: 13px 22px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.green {
+  background: #16a34a;
+}
+
+.red {
+  background: #dc2626;
+}
+
+.blue {
+  background: #2563eb;
+}
+
+.dark {
+  background: #334155;
+}
+
+.chatLayout,
+.friendLayout {
+  min-height: calc(100vh - 86px);
+  display: flex;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.10), transparent 30%),
+    #0b1120;
+}
+
+.leftPanel,
+.friendList {
+  width: 330px;
+  background: rgba(2, 6, 23, 0.92);
+  padding: 22px;
+  border-right: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.profileBox,
+.friendItem,
+.friendRequestCard,
+.card,
+.supportCard,
+.adminPanelCard {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+}
+
+.profileBox {
+  padding: 18px;
+  border-radius: 18px;
+  margin-top: 20px;
+  line-height: 1.8;
+}
+
+.chatPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.messages {
+  padding: 25px;
   overflow-y: auto;
+}
+
+.message {
+  width: fit-content;
+  max-width: 520px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+
+.other {
+  background: #1e293b;
+}
+
+.me {
+  background: #2563eb;
+  margin-left: auto;
+}
+
+.message img {
+  max-width: 260px;
+  border-radius: 14px;
+  display: block;
+  margin-top: 8px;
+}
+
+.bottomBar {
+  display: flex;
+  gap: 12px;
+  padding: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(2, 6, 23, 0.85);
+}
+
+.bottomBar input {
+  flex: 1;
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 999px;
+}
+
+.bottomBar button,
+.bottomBar label {
+  background: #2563eb;
+  color: white;
+  padding: 14px 18px;
+  border-radius: 999px;
+}
+
+.authPage {
+  min-height: calc(100vh - 86px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.16), transparent 30%),
+    #0b1120;
+}
+
+.authBox {
+  width: 430px;
+  max-width: 100%;
+  background: rgba(2, 6, 23, 0.92);
+  padding: 35px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 20px 70px rgba(0,0,0,0.35);
+}
+
+.authBox h1 {
+  margin-bottom: 22px;
+}
+
+.authBox input,
+.authBox select {
+  width: 100%;
+  background: #1e293b;
+  border: none;
+  color: white;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 15px;
+}
+
+.authBox button {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.card {
+  padding: 22px;
+  border-radius: 20px;
+  margin: 16px auto;
+  max-width: 960px;
+}
+
+.friendItem {
+  padding: 15px;
+  border-radius: 16px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.adminDashboard {
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.adminStat {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 22px;
+  padding: 24px;
+  text-align: center;
+}
+
+.adminStat strong {
+  font-size: 36px;
+  display: block;
+}
+
+.adminStat span {
+  color: #94a3b8;
+}
+
+.adminGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.wideAdminCard {
+  grid-column: 1 / -1;
+}
+
+.adminItem {
+  background: rgba(2, 6, 23, 0.74);
+  padding: 18px;
+  border-radius: 18px;
+  margin-top: 15px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.userAdminRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.smallButtons {
+  justify-content: flex-start;
+}
+
+.smallButtons button {
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.adminTextarea,
+.supportTextarea {
+  width: 100%;
+  min-height: 100px;
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 16px;
+  margin-top: 12px;
+}
+
+.supportGrid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.supportCard {
+  padding: 26px;
+  border-radius: 24px;
+}
+
+.supportInput {
+  width: 100%;
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 14px;
+  margin-top: 14px;
+}
+
+.supportButton {
+  margin-top: 16px;
+  padding: 14px 22px;
+  color: white;
+  border-radius: 999px;
+}
+
+.noticeBox {
+  background: rgba(37, 99, 235, 0.22);
+  border: 1px solid rgba(147, 197, 253, 0.22);
+  padding: 14px;
+  border-radius: 16px;
+  margin-top: 14px;
+}
+
+.ticketBox {
+  background: rgba(2, 6, 23, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  padding: 16px;
+  border-radius: 18px;
+  margin-top: 14px;
+}
+
+.ticketTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ticketStatus {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #334155;
+}
+
+.status-new {
+  background: #2563eb;
+}
+
+.status-in-progress {
+  background: #f97316;
+}
+
+.status-closed {
+  background: #16a34a;
+}
+
+.ticketAnswer {
+  background: rgba(22, 163, 74, 0.16);
+  padding: 12px;
+  border-radius: 14px;
+  margin-top: 12px;
 }
 
 .mutedText {
   color: #94a3b8;
   margin: 12px 0;
-}
-
-.friendRequestCard {
-  background: #1e293b;
-  border-radius: 16px;
-  padding: 15px;
-  margin-bottom: 12px;
 }
 
 .miniButtons {
@@ -69,13 +583,9 @@
   object-fit: cover;
 }
 
-.discordChatPanel {
-  min-width: 0;
-}
-
 .discordChatHeader {
   min-height: 78px;
-  border-bottom: 2px solid #1e293b;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -85,18 +595,6 @@
 
 .discordChatHeader p {
   color: #94a3b8;
-}
-
-.discordMessages {
-  flex: 1;
-}
-
-.discordMessage {
-  max-width: 560px;
-}
-
-.discordMessage p {
-  margin-bottom: 4px;
 }
 
 .messageMeta {
@@ -131,17 +629,13 @@
   font-size: 14px;
 }
 
-.discordInputBar {
-  background: #020617;
-}
-
 .fileButton,
 .voiceButton,
 .recordingButton,
 .sendButton {
   background: #2563eb;
   color: white;
-  border-radius: 14px;
+  border-radius: 999px;
   padding: 13px 16px;
   display: flex;
   align-items: center;
@@ -156,19 +650,104 @@
   font-weight: bold;
 }
 
+.profileHero {
+  max-width: 900px;
+  margin: 0 auto 25px auto;
+  background: rgba(2, 6, 23, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 24px;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.avatarBig {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #7c3aed);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 46px;
+  font-weight: bold;
+}
+
+.activeUsersBox {
+  margin: 28px auto 0 auto;
+  width: fit-content;
+  background: rgba(2, 6, 23, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #bbf7d0;
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-weight: bold;
+}
+
 @media (max-width: 900px) {
-  .discordSidebar {
-    width: 100%;
-    max-height: 320px;
+  .navbar {
+    justify-content: center;
   }
 
-  .discordInputBar {
+  .brandLogo {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .navLinks,
+  .authButtons {
+    justify-content: center;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .page {
+    padding: 18px;
+  }
+
+  .videoWrapper {
+    gap: 12px;
+  }
+
+  .videoBox {
+    height: 45vw;
+    max-height: 320px;
+    min-height: 190px;
+  }
+
+  .chatLayout,
+  .friendLayout {
+    flex-direction: column;
+  }
+
+  .leftPanel,
+  .friendList {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  .bottomBar {
     flex-wrap: wrap;
   }
 
-  .discordInputBar input {
+  .bottomBar input {
     width: 100%;
     flex-basis: 100%;
+  }
+
+  .adminDashboard,
+  .adminGrid,
+  .supportGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileHero {
+    flex-direction: column;
+    text-align: center;
   }
 
   .chatImage,

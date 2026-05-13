@@ -30,8 +30,8 @@ function Navbar() {
       <div className="navLinks">
         <Link to="/">Rozmowy</Link>
         <Link to="/chat">Chat</Link>
-        <Link to="/historia">Historia</Link>
         <Link to="/znajomi">Znajomi</Link>
+        <Link to="/historia">Historia</Link>
         <Link to="/profil">Profil</Link>
         <Link to="/pomoc">Pomoc</Link>
 
@@ -41,8 +41,8 @@ function Navbar() {
       <div className="authButtons">
         {user ? (
           <>
-            <span className={`userBadge role-${user.role}`}>
-              {user.nick} • {user.role}
+            <span className={`userBadge role-${user.role || "user"}`}>
+              {user.nick} • {user.role || "user"}
             </span>
 
             <button onClick={logout}>

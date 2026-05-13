@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(cors());
-app.use(express.json({ limit: "30mb" }));
+app.use(express.json({ limit: "80mb" }));
 
 app.get("/", (req, res) => {
   res.send("GadamyTV backend działa");
@@ -17,7 +17,8 @@ app.get("/", (req, res) => {
 const io = new Server(server, {
   cors: {
     origin: "*"
-  }
+  },
+  maxHttpBufferSize: 80 * 1024 * 1024
 });
 
 const DB_FILE = "./data.json";
@@ -28,7 +29,8 @@ let db = {
   friendRequests: [],
   history: [],
   privateMessages: [],
-  reports: []
+  reports: [],
+  tickets: []
 };
 
 if (fs.existsSync(DB_FILE)) {
@@ -41,6 +43,7 @@ if (!db.friendRequests) db.friendRequests = [];
 if (!db.history) db.history = [];
 if (!db.privateMessages) db.privateMessages = [];
 if (!db.reports) db.reports = [];
+if (!db.tickets) db.tickets = [];
 
 function saveDB() {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
@@ -84,23 +87,6 @@ function getUserFromSocket(socket) {
   return getUserByToken(token);
 }
 
-function requireAdmin(req, res, minRole = "support") {
-  const token = req.headers.authorization;
-  const user = getUserByToken(token);
-
-  if (!user) {
-    res.status(401).json({ message: "Brak logowania" });
-    return null;
-  }
-
-  if (rolePower(user.role) < rolePower(minRole)) {
-    res.status(403).json({ message: "Brak uprawnień" });
-    return null;
-  }
-
-  return user;
-}
-
 function fixOwner() {
   const hasOwner = db.users.some(u => u.role === "owner");
 
@@ -108,6 +94,29 @@ function fixOwner() {
     db.users[0].role = "owner";
     saveDB();
   }
+}
+
+function requireAdmin(req, res, minRole = "support") {
+  fixOwner();
+
+  const token = req.headers.authorization;
+  const user = getUserByToken(token);
+
+  if (!user) {
+    res.status(401).json({
+      message: "Brak logowania"
+    });
+    return null;
+  }
+
+  if (rolePower(user.role) < rolePower(minRole)) {
+    res.status(403).json({
+      message: "Brak uprawnień"
+    });
+    return null;
+  }
+
+  return user;
 }
 
 function addHistory(type, userA, userB, message = "") {
@@ -128,8 +137,10 @@ function addHistory(type, userA, userB, message = "") {
   saveDB();
 }
 
+/* AUTH */
+
 app.post("/api/register", (req, res) => {
-  const { nick, name, age, password } = req.body;
+  const { nick, name, age, gender, country, password } = req.body;
 
   if (!nick || !name || !age || !password) {
     return res.status(400).json({
@@ -152,8 +163,14 @@ app.post("/api/register", (req, res) => {
     nick,
     name,
     age,
+    gender: gender || "brak",
+    country: country || "Polska",
     password,
     role: db.users.length === 0 ? "owner" : "user",
+    avatar: "",
+    bio: "",
+    socials: {},
+    achievements: ["Nowy użytkownik"],
     createdAt: new Date().toISOString()
   };
 
@@ -191,15 +208,21 @@ app.post("/api/login", (req, res) => {
 });
 
 app.get("/api/me", (req, res) => {
+  fixOwner();
+
   const token = req.headers.authorization;
   const user = getUserByToken(token);
 
   if (!user) {
-    return res.status(401).json({ message: "Brak logowania" });
+    return res.status(401).json({
+      message: "Brak logowania"
+    });
   }
 
   res.json(publicUser(user));
 });
+
+/* HISTORY */
 
 app.get("/api/history", (req, res) => {
   const token = req.headers.authorization;
@@ -210,6 +233,8 @@ app.get("/api/history", (req, res) => {
 
   res.json(history);
 });
+
+/* FRIENDS */
 
 app.get("/api/friends", (req, res) => {
   const token = req.headers.authorization;
@@ -241,6 +266,8 @@ app.get("/api/friend-requests", (req, res) => {
   res.json(requests);
 });
 
+/* PRIVATE CHAT */
+
 app.get("/api/private/:friendId", (req, res) => {
   const token = req.headers.authorization;
   const friendId = req.params.friendId;
@@ -251,6 +278,67 @@ app.get("/api/private/:friendId", (req, res) => {
 
   res.json(messages);
 });
+
+/* TICKETS */
+
+app.post("/api/tickets", (req, res) => {
+  const token = req.headers.authorization;
+  const user = getUserByToken(token);
+
+  if (!user) {
+    return res.status(401).json({
+      message: "Musisz być zalogowany"
+    });
+  }
+
+  const { title, category, description } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({
+      message: "Podaj tytuł i opis zgłoszenia"
+    });
+  }
+
+  const ticket = {
+    id: makeId(),
+    from: user.id,
+    title,
+    category: category || "Inne",
+    description,
+    status: "new",
+    answer: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  db.tickets.push(ticket);
+  saveDB();
+
+  Object.entries(onlineUsers).forEach(([userId, socketId]) => {
+    const adminUser = db.users.find(u => u.id === userId);
+
+    if (adminUser && rolePower(adminUser.role) >= 1) {
+      io.to(socketId).emit("new-ticket", ticket);
+    }
+  });
+
+  res.json({
+    message: "Ticket został wysłany",
+    ticket
+  });
+});
+
+app.get("/api/my-tickets", (req, res) => {
+  const token = req.headers.authorization;
+
+  const tickets = db.tickets
+    .filter(t => t.from === token)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.json(tickets);
+});
+
+/* ADMIN */
 
 app.get("/api/admin/users", (req, res) => {
   const admin = requireAdmin(req, res, "support");
@@ -277,6 +365,50 @@ app.get("/api/admin/reports", (req, res) => {
   res.json(reports);
 });
 
+app.get("/api/admin/tickets", (req, res) => {
+  const admin = requireAdmin(req, res, "support");
+  if (!admin) return;
+
+  const tickets = db.tickets
+    .map(ticket => {
+      const fromUser = db.users.find(u => u.id === ticket.from);
+
+      return {
+        ...ticket,
+        fromUser: publicUser(fromUser)
+      };
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.json(tickets);
+});
+
+app.post("/api/admin/ticket-status", (req, res) => {
+  const admin = requireAdmin(req, res, "support");
+  if (!admin) return;
+
+  const { ticketId, status, answer } = req.body;
+
+  const ticket = db.tickets.find(t => t.id === ticketId);
+
+  if (!ticket) {
+    return res.status(404).json({
+      message: "Nie znaleziono ticketu"
+    });
+  }
+
+  ticket.status = status || ticket.status;
+  ticket.answer = answer || ticket.answer;
+  ticket.updatedAt = new Date().toISOString();
+  ticket.reviewedBy = admin.id;
+
+  saveDB();
+
+  res.json({
+    message: "Ticket zaktualizowany"
+  });
+});
+
 app.post("/api/admin/set-role", (req, res) => {
   const admin = requireAdmin(req, res, "owner");
   if (!admin) return;
@@ -284,19 +416,26 @@ app.post("/api/admin/set-role", (req, res) => {
   const { userId, role } = req.body;
 
   if (!["user", "support", "admin", "owner"].includes(role)) {
-    return res.status(400).json({ message: "Niepoprawna ranga" });
+    return res.status(400).json({
+      message: "Niepoprawna ranga"
+    });
   }
 
   const user = db.users.find(u => u.id === userId);
 
   if (!user) {
-    return res.status(404).json({ message: "Nie znaleziono użytkownika" });
+    return res.status(404).json({
+      message: "Nie znaleziono użytkownika"
+    });
   }
 
   user.role = role;
   saveDB();
 
-  res.json({ message: "Ranga zmieniona", user: publicUser(user) });
+  res.json({
+    message: "Ranga zmieniona",
+    user: publicUser(user)
+  });
 });
 
 app.post("/api/admin/report-status", (req, res) => {
@@ -308,7 +447,9 @@ app.post("/api/admin/report-status", (req, res) => {
   const report = db.reports.find(r => r.id === reportId);
 
   if (!report) {
-    return res.status(404).json({ message: "Nie znaleziono zgłoszenia" });
+    return res.status(404).json({
+      message: "Nie znaleziono zgłoszenia"
+    });
   }
 
   report.status = status;
@@ -317,8 +458,12 @@ app.post("/api/admin/report-status", (req, res) => {
 
   saveDB();
 
-  res.json({ message: "Zmieniono status zgłoszenia" });
+  res.json({
+    message: "Zmieniono status zgłoszenia"
+  });
 });
+
+/* SOCKET */
 
 let onlineUsers = {};
 let waitingVideo = [];
@@ -395,13 +540,11 @@ function matchUsers(socket, queue, type) {
       partner: publicUser(user)
     });
 
-    console.log("MATCH", type, user.nick, partnerUser.nick);
     return queue;
   }
 
   queue.push(socket);
   socket.emit(`${type}-searching`);
-  console.log("WAITING", type, user.nick);
 
   return queue;
 }
@@ -577,6 +720,47 @@ io.on("connection", socket => {
     socket.emit("friend-request-rejected");
   });
 
+  socket.on("private-typing", data => {
+    const sender = getUserFromSocket(socket);
+    if (!sender || !data.to) return;
+
+    const receiverSocket = onlineUsers[data.to];
+
+    if (receiverSocket) {
+      io.to(receiverSocket).emit("private-typing", {
+        from: sender.id,
+        nick: sender.nick
+      });
+    }
+  });
+
+  socket.on("private-read", data => {
+    const reader = getUserFromSocket(socket);
+    if (!reader || !data.friendId) return;
+
+    db.privateMessages = db.privateMessages.map(msg => {
+      if (msg.from === data.friendId && msg.to === reader.id) {
+        return {
+          ...msg,
+          read: true,
+          readAt: new Date().toISOString()
+        };
+      }
+
+      return msg;
+    });
+
+    saveDB();
+
+    const senderSocket = onlineUsers[data.friendId];
+
+    if (senderSocket) {
+      io.to(senderSocket).emit("private-read", {
+        by: reader.id
+      });
+    }
+  });
+
   socket.on("private-message", data => {
     const sender = getUserFromSocket(socket);
 
@@ -588,7 +772,13 @@ io.on("connection", socket => {
       from: sender.id,
       to: data.to,
       text: data.text || "",
+      media: data.media || "",
+      mediaType: data.mediaType || "",
+      fileName: data.fileName || "",
+      voice: data.voice || "",
+      video: data.video || "",
       image: data.image || "",
+      read: false,
       date: new Date().toISOString()
     };
 
@@ -601,6 +791,10 @@ io.on("connection", socket => {
 
     if (receiverSocket) {
       io.to(receiverSocket).emit("private-message", msg);
+      io.to(receiverSocket).emit("private-notification", {
+        from: publicUser(sender),
+        text: msg.text || "Nowa wiadomość"
+      });
     }
   });
 
@@ -623,19 +817,9 @@ io.on("connection", socket => {
     saveDB();
 
     socket.emit("report-sent");
-
-    Object.entries(onlineUsers).forEach(([userId, socketId]) => {
-      const adminUser = db.users.find(u => u.id === userId);
-
-      if (adminUser && rolePower(adminUser.role) >= 1) {
-        io.to(socketId).emit("new-report", report);
-      }
-    });
   });
 
   socket.on("disconnect", () => {
-    console.log("DISCONNECTED:", socket.id, user?.nick);
-
     waitingVideo = waitingVideo.filter(s => s.id !== socket.id);
     waitingChat = waitingChat.filter(s => s.id !== socket.id);
 
