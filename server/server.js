@@ -9,6 +9,7 @@ const server = http.createServer(app);
 
 app.use(cors());
 app.use(express.json({ limit: "20mb" }));
+
 app.get("/", (req, res) => {
   res.send("GadamyTV backend działa");
 });
@@ -30,7 +31,13 @@ let db = {
 };
 
 if (fs.existsSync(DB_FILE)) {
-  db = JSON.parse(fs.readFileSync(DB_FILE));
+  db = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
+
+  if (!db.users) db.users = [];
+  if (!db.friends) db.friends = {};
+  if (!db.friendRequests) db.friendRequests = [];
+  if (!db.history) db.history = [];
+  if (!db.privateMessages) db.privateMessages = [];
 }
 
 function saveDB() {
@@ -42,6 +49,8 @@ function makeId() {
 }
 
 function publicUser(user) {
+  if (!user) return null;
+
   return {
     id: user.id,
     nick: user.nick,
@@ -50,144 +59,18 @@ function publicUser(user) {
   };
 }
 
-app.post("/api/register", (req, res) => {
-  const { nick, name, age, password } = req.body;
-
-  if (!nick || !name || !age || !password) {
-    return res.status(400).json({ message: "Uzupełnij wszystkie pola" });
-  }
-
-  const exists = db.users.find(u => u.nick === nick);
-
-  if (exists) {
-    return res.status(400).json({ message: "Ten nick jest zajęty" });
-  }
-
-  const user = {
-    id: makeId(),
-    nick,
-    name,
-    age,
-    password
-  };
-
-  db.users.push(user);
-  db.friends[user.id] = [];
-  saveDB();
-
-  res.json({
-    token: user.id,
-    user: publicUser(user)
-  });
-});
-
-app.post("/api/login", (req, res) => {
-  const { nick, password } = req.body;
-
-  const user = db.users.find(
-    u => u.nick === nick && u.password === password
-  );
-
-  if (!user) {
-    return res.status(401).json({ message: "Błędny nick lub hasło" });
-  }
-
-  res.json({
-    token: user.id,
-    user: publicUser(user)
-  });
-});
-
-app.get("/api/me", (req, res) => {
-  const token = req.headers.authorization;
-
-  const user = db.users.find(u => u.id === token);
-
-  if (!user) {
-    return res.status(401).json({ message: "Brak logowania" });
-  }
-
-  res.json(publicUser(user));
-});
-
-app.get("/api/history", (req, res) => {
-  const token = req.headers.authorization;
-
-  const history = db.history.filter(h =>
-    h.users.includes(token)
-  );
-
-  res.json(history);
-});
-
-app.get("/api/friends", (req, res) => {
-  const token = req.headers.authorization;
-
-  const ids = db.friends[token] || [];
-
-  const friends = db.users
-    .filter(u => ids.includes(u.id))
-    .map(publicUser);
-
-  res.json(friends);
-});
-
-app.get("/api/friend-requests", (req, res) => {
-  const token = req.headers.authorization;
-
-  const requests = db.friendRequests
-    .filter(r => r.to === token && r.status === "pending")
-    .map(r => {
-      const fromUser = db.users.find(u => u.id === r.from);
-
-      return {
-        id: r.id,
-        from: publicUser(fromUser),
-        date: r.date
-      };
-    });
-
-  res.json(requests);
-});
-
-app.get("/api/private/:friendId", (req, res) => {
-  const token = req.headers.authorization;
-  const friendId = req.params.friendId;
-
-  const messages = db.privateMessages.filter(m =>
-    m.users.includes(token) && m.users.includes(friendId)
-  );
-
-  res.json(messages);
-});
-
-let onlineUsers = {};
-let waitingChat = [];
-let waitingVideo = [];
-let rooms = {};
-
-function getUserFromSocket(socket) {
-  const token = socket.handshake.auth.token;
+function getUserByToken(token) {
   return db.users.find(u => u.id === token);
 }
 
-function leaveRoom(socket) {
-  const room = rooms[socket.id];
-
-  if (!room) return;
-
-  const partnerSocket = io.sockets.sockets.get(room.partnerSocketId);
-
-  if (partnerSocket) {
-    partnerSocket.emit("partner-left");
-    delete rooms[partnerSocket.id];
-  }
-
-  socket.leave(room.roomId);
-  delete rooms[socket.id];
+function getUserFromSocket(socket) {
+  const token = socket.handshake.auth?.token;
+  return getUserByToken(token);
 }
 
 function addHistory(type, userA, userB, message = "") {
+  if (!userA || !userB) return;
+
   db.history.push({
     id: makeId(),
     type,
@@ -203,12 +86,154 @@ function addHistory(type, userA, userB, message = "") {
   saveDB();
 }
 
+app.post("/api/register", (req, res) => {
+  const { nick, name, age, password } = req.body;
+
+  if (!nick || !name || !age || !password) {
+    return res.status(400).json({
+      message: "Uzupełnij wszystkie pola"
+    });
+  }
+
+  const exists = db.users.find(
+    u => u.nick.toLowerCase() === nick.toLowerCase()
+  );
+
+  if (exists) {
+    return res.status(400).json({
+      message: "Ten nick jest zajęty"
+    });
+  }
+
+  const user = {
+    id: makeId(),
+    nick,
+    name,
+    age,
+    password
+  };
+
+  db.users.push(user);
+  db.friends[user.id] = [];
+  saveDB();
+
+  return res.json({
+    token: user.id,
+    user: publicUser(user)
+  });
+});
+
+app.post("/api/login", (req, res) => {
+  const { nick, password } = req.body;
+
+  const user = db.users.find(
+    u => u.nick.toLowerCase() === nick.toLowerCase() && u.password === password
+  );
+
+  if (!user) {
+    return res.status(401).json({
+      message: "Błędny nick lub hasło"
+    });
+  }
+
+  return res.json({
+    token: user.id,
+    user: publicUser(user)
+  });
+});
+
+app.get("/api/me", (req, res) => {
+  const token = req.headers.authorization;
+  const user = getUserByToken(token);
+
+  if (!user) {
+    return res.status(401).json({
+      message: "Brak logowania"
+    });
+  }
+
+  return res.json(publicUser(user));
+});
+
+app.get("/api/history", (req, res) => {
+  const token = req.headers.authorization;
+
+  const history = db.history.filter(h =>
+    h.users.includes(token)
+  );
+
+  return res.json(history);
+});
+
+app.get("/api/friends", (req, res) => {
+  const token = req.headers.authorization;
+  const ids = db.friends[token] || [];
+
+  const friends = db.users
+    .filter(u => ids.includes(u.id))
+    .map(publicUser);
+
+  return res.json(friends);
+});
+
+app.get("/api/friend-requests", (req, res) => {
+  const token = req.headers.authorization;
+
+  const requests = db.friendRequests
+    .filter(r => r.to === token && r.status === "pending")
+    .map(r => {
+      const fromUser = db.users.find(u => u.id === r.from);
+
+      return {
+        id: r.id,
+        from: publicUser(fromUser),
+        date: r.date
+      };
+    })
+    .filter(r => r.from);
+
+  return res.json(requests);
+});
+
+app.get("/api/private/:friendId", (req, res) => {
+  const token = req.headers.authorization;
+  const friendId = req.params.friendId;
+
+  const messages = db.privateMessages.filter(m =>
+    m.users.includes(token) && m.users.includes(friendId)
+  );
+
+  return res.json(messages);
+});
+
+let onlineUsers = {};
+let waitingChat = [];
+let waitingVideo = [];
+let rooms = {};
+
+function leaveRoom(socket) {
+  const room = rooms[socket.id];
+
+  if (!room) return;
+
+  const partnerSocket = io.sockets.sockets.get(room.partnerSocketId);
+
+  if (partnerSocket) {
+    partnerSocket.emit("partner-left");
+    delete rooms[partnerSocket.id];
+    partnerSocket.leave(room.roomId);
+  }
+
+  socket.leave(room.roomId);
+  delete rooms[socket.id];
+}
+
 function matchUsers(socket, queue, type) {
   const user = getUserFromSocket(socket);
 
   if (!user) {
     socket.emit("auth-error");
-    return;
+    return queue;
   }
 
   queue = queue.filter(s => s.id !== socket.id);
@@ -216,6 +241,12 @@ function matchUsers(socket, queue, type) {
   if (queue.length > 0) {
     const partner = queue.shift();
     const partnerUser = getUserFromSocket(partner);
+
+    if (!partnerUser) {
+      socket.emit(`${type}-searching`);
+      queue.push(socket);
+      return queue;
+    }
 
     const roomId = `${type}-${socket.id}-${partner.id}`;
 
@@ -250,16 +281,23 @@ function matchUsers(socket, queue, type) {
       partner: publicUser(user)
     });
 
+    console.log(`MATCH ${type}:`, user.nick, partnerUser.nick);
+
     return queue;
   }
 
   queue.push(socket);
   socket.emit(`${type}-searching`);
+
+  console.log(`WAITING ${type}:`, user.nick);
+
   return queue;
 }
 
 io.on("connection", socket => {
   const user = getUserFromSocket(socket);
+
+  console.log("CONNECTED:", socket.id, user?.nick);
 
   if (user) {
     onlineUsers[user.id] = socket.id;
@@ -283,6 +321,7 @@ io.on("connection", socket => {
     if (!room || !user) return;
 
     const partnerSocket = io.sockets.sockets.get(room.partnerSocketId);
+    const partnerUser = db.users.find(u => u.id === room.partnerUserId);
 
     if (partnerSocket) {
       partnerSocket.emit("receive-random-message", {
@@ -290,8 +329,6 @@ io.on("connection", socket => {
         from: publicUser(user)
       });
     }
-
-    const partnerUser = db.users.find(u => u.id === room.partnerUserId);
 
     if (partnerUser) {
       addHistory("chat", user, partnerUser, text);
@@ -322,123 +359,142 @@ io.on("connection", socket => {
     }
   });
 
-socket.on("send-friend-request", friendId => {
-  const user = getUserFromSocket(socket);
+  socket.on("stop", () => {
+    leaveRoom(socket);
+  });
 
-  if (!user || !friendId) return;
+  socket.on("send-friend-request", friendId => {
+    const user = getUserFromSocket(socket);
 
-  if (user.id === friendId) return;
+    if (!user || !friendId) return;
+    if (user.id === friendId) return;
 
-  const alreadyFriends =
-    db.friends[user.id]?.includes(friendId);
+    if (!db.friends[user.id]) {
+      db.friends[user.id] = [];
+    }
 
-  if (alreadyFriends) {
-    socket.emit("friend-request-error", "Już jesteście znajomymi");
-    return;
-  }
+    if (!db.friends[friendId]) {
+      db.friends[friendId] = [];
+    }
 
-  const existingRequest = db.friendRequests.find(r =>
-    r.from === user.id &&
-    r.to === friendId &&
-    r.status === "pending"
-  );
+    const alreadyFriends = db.friends[user.id].includes(friendId);
 
-  if (existingRequest) {
-    socket.emit("friend-request-error", "Zaproszenie już zostało wysłane");
-    return;
-  }
+    if (alreadyFriends) {
+      socket.emit("friend-request-error", "Już jesteście znajomymi");
+      return;
+    }
 
-  const request = {
-    id: makeId(),
-    from: user.id,
-    to: friendId,
-    status: "pending",
-    date: new Date().toISOString()
-  };
+    const existingRequest = db.friendRequests.find(r =>
+      r.from === user.id &&
+      r.to === friendId &&
+      r.status === "pending"
+    );
 
-  db.friendRequests.push(request);
-  saveDB();
+    if (existingRequest) {
+      socket.emit("friend-request-error", "Zaproszenie już zostało wysłane");
+      return;
+    }
 
-  socket.emit("friend-request-sent");
+    const reverseRequest = db.friendRequests.find(r =>
+      r.from === friendId &&
+      r.to === user.id &&
+      r.status === "pending"
+    );
 
-  const receiverSocket = onlineUsers[friendId];
+    if (reverseRequest) {
+      socket.emit("friend-request-error", "Ta osoba już wysłała Ci zaproszenie");
+      return;
+    }
 
-  if (receiverSocket) {
-    io.to(receiverSocket).emit("new-friend-request", {
-      id: request.id,
-      from: publicUser(user),
-      date: request.date
-    });
-  }
-});
+    const request = {
+      id: makeId(),
+      from: user.id,
+      to: friendId,
+      status: "pending",
+      date: new Date().toISOString()
+    };
 
+    db.friendRequests.push(request);
+    saveDB();
 
-socket.on("accept-friend-request", requestId => {
-  const user = getUserFromSocket(socket);
+    socket.emit("friend-request-sent");
 
-  if (!user) return;
+    const receiverSocket = onlineUsers[friendId];
 
-  const request = db.friendRequests.find(r =>
-    r.id === requestId &&
-    r.to === user.id &&
-    r.status === "pending"
-  );
+    if (receiverSocket) {
+      io.to(receiverSocket).emit("new-friend-request", {
+        id: request.id,
+        from: publicUser(user),
+        date: request.date
+      });
+    }
+  });
 
-  if (!request) return;
+  socket.on("accept-friend-request", requestId => {
+    const user = getUserFromSocket(socket);
 
-  request.status = "accepted";
+    if (!user) return;
 
-  if (!db.friends[user.id]) {
-    db.friends[user.id] = [];
-  }
+    const request = db.friendRequests.find(r =>
+      r.id === requestId &&
+      r.to === user.id &&
+      r.status === "pending"
+    );
 
-  if (!db.friends[request.from]) {
-    db.friends[request.from] = [];
-  }
+    if (!request) return;
 
-  if (!db.friends[user.id].includes(request.from)) {
-    db.friends[user.id].push(request.from);
-  }
+    request.status = "accepted";
 
-  if (!db.friends[request.from].includes(user.id)) {
-    db.friends[request.from].push(user.id);
-  }
+    if (!db.friends[user.id]) {
+      db.friends[user.id] = [];
+    }
 
-  saveDB();
+    if (!db.friends[request.from]) {
+      db.friends[request.from] = [];
+    }
 
-  socket.emit("friend-request-accepted");
+    if (!db.friends[user.id].includes(request.from)) {
+      db.friends[user.id].push(request.from);
+    }
 
-  const senderSocket = onlineUsers[request.from];
+    if (!db.friends[request.from].includes(user.id)) {
+      db.friends[request.from].push(user.id);
+    }
 
-  if (senderSocket) {
-    io.to(senderSocket).emit("friend-request-accepted");
-  }
-});
+    saveDB();
 
+    socket.emit("friend-request-accepted");
 
-socket.on("reject-friend-request", requestId => {
-  const user = getUserFromSocket(socket);
+    const senderSocket = onlineUsers[request.from];
 
-  if (!user) return;
+    if (senderSocket) {
+      io.to(senderSocket).emit("friend-request-accepted");
+    }
+  });
 
-  const request = db.friendRequests.find(r =>
-    r.id === requestId &&
-    r.to === user.id &&
-    r.status === "pending"
-  );
+  socket.on("reject-friend-request", requestId => {
+    const user = getUserFromSocket(socket);
 
-  if (!request) return;
+    if (!user) return;
 
-  request.status = "rejected";
-  saveDB();
+    const request = db.friendRequests.find(r =>
+      r.id === requestId &&
+      r.to === user.id &&
+      r.status === "pending"
+    );
 
-  socket.emit("friend-request-rejected");
-});
+    if (!request) return;
+
+    request.status = "rejected";
+    saveDB();
+
+    socket.emit("friend-request-rejected");
+  });
 
   socket.on("private-message", data => {
     const user = getUserFromSocket(socket);
 
-    if (!user) return;
+    if (!user || !data.to) return;
 
     const msg = {
       id: makeId(),
@@ -462,12 +518,8 @@ socket.on("reject-friend-request", requestId => {
     }
   });
 
-  socket.on("stop", () => {
-    leaveRoom(socket);
-  });
-
   socket.on("disconnect", () => {
-    const user = getUserFromSocket(socket);
+    console.log("DISCONNECTED:", socket.id, user?.nick);
 
     waitingChat = waitingChat.filter(s => s.id !== socket.id);
     waitingVideo = waitingVideo.filter(s => s.id !== socket.id);
