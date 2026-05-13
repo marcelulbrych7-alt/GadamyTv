@@ -27,7 +27,7 @@ function Rozmowy() {
 
       setMicrophones(mics);
 
-      if (mics[0] && !selectedMic) {
+      if (mics.length > 0 && !selectedMic) {
         setSelectedMic(mics[0].deviceId);
       }
     } catch (err) {
@@ -125,15 +125,14 @@ function Rozmowy() {
 
     if (!streamRef.current) {
       const stream = await startCamera();
-
       if (!stream) return;
     }
 
     connectSocket();
 
+    setPartner(null);
     setSearching(true);
     setConnected(false);
-    setPartner(null);
     setStatus("Szukanie aktywnej osoby...");
 
     const filters = {
@@ -181,9 +180,19 @@ function Rozmowy() {
     }
 
     setPartner(null);
-    setSearching(false);
     setConnected(false);
+    setSearching(false);
     setStatus("Zatrzymano rozmowę");
+  };
+
+  const changeMicrophone = async value => {
+    setSelectedMic(value);
+
+    if (cameraReady) {
+      setTimeout(() => {
+        startCamera();
+      }, 150);
+    }
   };
 
   const addFriend = () => {
@@ -213,16 +222,6 @@ function Rozmowy() {
     });
 
     alert("Wysłano zgłoszenie");
-  };
-
-  const changeMicrophone = async value => {
-    setSelectedMic(value);
-
-    if (cameraReady) {
-      setTimeout(() => {
-        startCamera();
-      }, 100);
-    }
   };
 
   useEffect(() => {
@@ -319,44 +318,55 @@ function Rozmowy() {
 
   return (
     <div className="page rozmowyPage">
-      <h1 className="title">Rozmowy Video</h1>
+      <div className="rozmowyHeader">
+        <h1 className="title">Rozmowy Video</h1>
+        <p className="status">{status}</p>
+      </div>
 
-      <p className="status">{status}</p>
-
-      <div className="matchFilters">
-        <div className="filterCard">
-          <span>🌍 Kraj rozmówcy</span>
-
-          <select
-            value={filterCountry}
-            onChange={e => setFilterCountry(e.target.value)}
-          >
-            <option value="dowolny">Dowolny kraj</option>
-            <option value="Polska">Polska</option>
-            <option value="Niemcy">Niemcy</option>
-            <option value="Czechy">Czechy</option>
-            <option value="Ukraina">Ukraina</option>
-            <option value="USA">USA</option>
-          </select>
+      <div className="prettyFilterPanel">
+        <div className="filterHeading">
+          <span className="filterIcon">🎯</span>
+          <div>
+            <h2>Dopasuj rozmówcę</h2>
+            <p>Wybierz kraj i płeć osoby, którą chcesz wylosować</p>
+          </div>
         </div>
 
-        <div className="filterCard">
-          <span>🧑 Płeć rozmówcy</span>
+        <div className="filterControls">
+          <div className="prettySelectBox">
+            <span>🌍 Kraj</span>
 
-          <select
-            value={filterGender}
-            onChange={e => setFilterGender(e.target.value)}
-          >
-            <option value="dowolny">Dowolna płeć</option>
-            <option value="kobieta">Kobieta</option>
-            <option value="mezczyzna">Mężczyzna</option>
-            <option value="inna">Inna</option>
-          </select>
+            <select
+              value={filterCountry}
+              onChange={e => setFilterCountry(e.target.value)}
+            >
+              <option value="dowolny">Dowolny kraj</option>
+              <option value="Polska">Polska</option>
+              <option value="Niemcy">Niemcy</option>
+              <option value="Czechy">Czechy</option>
+              <option value="Ukraina">Ukraina</option>
+              <option value="USA">USA</option>
+            </select>
+          </div>
+
+          <div className="prettySelectBox">
+            <span>🧑 Płeć</span>
+
+            <select
+              value={filterGender}
+              onChange={e => setFilterGender(e.target.value)}
+            >
+              <option value="dowolny">Dowolna płeć</option>
+              <option value="kobieta">Kobieta</option>
+              <option value="mezczyzna">Mężczyzna</option>
+              <option value="inna">Inna</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="buttons topVideoButtons">
-        <button className="blue mainStartButton" onClick={startSearching}>
+      <div className="buttons">
+        <button className="mainStartButton" onClick={startSearching}>
           {cameraReady ? "Szukaj rozmówcy" : "Start kamerki"}
         </button>
       </div>
@@ -369,18 +379,22 @@ function Rozmowy() {
             {cameraReady ? (
               <video ref={myVideo} autoPlay muted playsInline />
             ) : (
-              <div className="videoPlaceholder">
-                <div className="placeholderIcon">🎥</div>
+              <div className="myCameraPlaceholder">
+                <div className="placeholderBigIcon">🎥</div>
                 <h3>Twoja kamera</h3>
                 <p>Kliknij Start kamerki, aby uruchomić podgląd.</p>
               </div>
             )}
           </div>
 
-          <div className="micPanel">
-            <div>
-              <strong>🎙️ Mikrofon</strong>
-              <p>Wybierz urządzenie audio</p>
+          <div className="microphonePanel">
+            <div className="micVisual">
+              <div className="micIconCircle">🎙️</div>
+
+              <div>
+                <h3>Mikrofon</h3>
+                <p>Wybierz urządzenie, z którego chcesz rozmawiać</p>
+              </div>
             </div>
 
             <select
@@ -409,20 +423,27 @@ function Rozmowy() {
             {connected ? (
               <video ref={partnerVideo} autoPlay playsInline />
             ) : (
-              <div className="videoPlaceholder partnerPlaceholder">
-                <div className="placeholderPulse"></div>
-                <div className="placeholderIcon">✨</div>
+              <div className="partnerWaitingGraphic">
+                <div className="orbit">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+
+                <div className="partnerGraphicIcon">
+                  {searching ? "🔎" : "✨"}
+                </div>
 
                 <h3>
                   {searching
                     ? "Szukamy rozmówcy..."
-                    : "Gotowy na rozmowę?"}
+                    : "Tutaj pojawi się rozmówca"}
                 </h3>
 
                 <p>
                   {searching
-                    ? "Trwa losowanie aktywnej osoby online."
-                    : "Po kliknięciu Start pojawi się tutaj kamera rozmówcy."}
+                    ? "Trwa losowanie aktywnej osoby online. Kamera pojawi się po połączeniu."
+                    : "Kliknij Start, a po znalezieniu osoby grafika zmieni się w kamerę rozmówcy."}
                 </p>
               </div>
             )}
