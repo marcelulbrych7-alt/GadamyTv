@@ -498,4 +498,15 @@ button {
     flex-direction: column;
     text-align: center;
   }
+  .activeUsersBox {
+  margin: 28px auto 0 auto;
+  width: fit-content;
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: #bbf7d0;
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-weight: bold;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+}
 }

@@ -10,6 +10,7 @@ function Rozmowy() {
   const [status, setStatus] = useState("Kliknij Start, aby rozpocząć");
   const [partner, setPartner] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [activeUsers, setActiveUsers] = useState(0);
 
   const startCamera = async () => {
     try {
@@ -157,6 +158,12 @@ function Rozmowy() {
   };
 
   useEffect(() => {
+    connectSocket();
+
+    socket.on("online-users", users => {
+      setActiveUsers(users.length);
+    });
+
     socket.on("video-searching", () => {
       setStatus("Szukanie aktywnej osoby...");
     });
@@ -225,6 +232,7 @@ function Rozmowy() {
     });
 
     return () => {
+      socket.off("online-users");
       socket.off("video-searching");
       socket.off("video-found");
       socket.off("webrtc-signal");
@@ -233,10 +241,9 @@ function Rozmowy() {
   }, []);
 
   return (
-    <div className="page heroPage">
-      <div className="heroGlow"></div>
-
+    <div className="page">
       <h1 className="title">Rozmowy Video</h1>
+
       <p className="status">{status}</p>
 
       <div className="buttons">
@@ -245,7 +252,15 @@ function Rozmowy() {
         </button>
       </div>
 
-      <div className="videoWrapper bigVideos">
+      <div className="videoWrapper">
+        <div className="videoCard">
+          <div className="videoLabel">Ty</div>
+
+          <div className="videoBox">
+            <video ref={myVideo} autoPlay muted playsInline />
+          </div>
+        </div>
+
         <div className="videoCard">
           <div className="videoLabel">
             {partner ? `${partner.nick} • ${partner.age} lat` : "Losowy użytkownik"}
@@ -253,14 +268,6 @@ function Rozmowy() {
 
           <div className="videoBox">
             <video ref={partnerVideo} autoPlay playsInline />
-          </div>
-        </div>
-
-        <div className="videoCard">
-          <div className="videoLabel">Ty</div>
-
-          <div className="videoBox">
-            <video ref={myVideo} autoPlay muted playsInline />
           </div>
         </div>
       </div>
@@ -281,6 +288,10 @@ function Rozmowy() {
         <button className="blue" onClick={next}>
           Dalej
         </button>
+      </div>
+
+      <div className="activeUsersBox">
+        🟢 Aktywni użytkownicy: {activeUsers}
       </div>
     </div>
   );

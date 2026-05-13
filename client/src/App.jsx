@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Admin from "./pages/Admin";
 import Profil from "./pages/Profil";
+import Pomoc from "./pages/Pomoc";
 
 function App() {
   return (
@@ -21,10 +22,11 @@ function App() {
         <Route path="/chat" element={<Chat />} />
         <Route path="/historia" element={<Historia />} />
         <Route path="/znajomi" element={<Znajomi />} />
+        <Route path="/profil" element={<Profil />} />
+        <Route path="/pomoc" element={<Pomoc />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/profil" element={<Profil />} />
       </Routes>
     </BrowserRouter>
   );

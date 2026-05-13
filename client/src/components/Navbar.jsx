@@ -33,6 +33,7 @@ function Navbar() {
         <Link to="/historia">Historia</Link>
         <Link to="/znajomi">Znajomi</Link>
         <Link to="/profil">Profil</Link>
+        <Link to="/pomoc">Pomoc</Link>
 
         {canSeeAdmin && <Link to="/admin">Admin</Link>}
       </div>
