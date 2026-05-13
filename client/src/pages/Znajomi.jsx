@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import socket, { connectSocket } from "../socket/socket";
 
-const API = `http://${window.location.hostname}:5000`;
+const API = `https://gadamytv-backend.onrender.com`;
 
 function Znajomi() {
   const [friends, setFriends] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [activeFriend, setActiveFriend] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
@@ -20,6 +21,17 @@ function Znajomi() {
 
     const data = await res.json();
     setFriends(data);
+  };
+
+  const loadRequests = async () => {
+    const res = await fetch(`${API}/api/friend-requests`, {
+      headers: {
+        Authorization: localStorage.getItem("token")
+      }
+    });
+
+    const data = await res.json();
+    setRequests(data);
   };
 
   const loadMessages = async friend => {
@@ -38,15 +50,49 @@ function Znajomi() {
   useEffect(() => {
     connectSocket();
     loadFriends();
+    loadRequests();
+
+    socket.on("new-friend-request", () => {
+      loadRequests();
+    });
+
+    socket.on("friend-request-accepted", () => {
+      loadFriends();
+      loadRequests();
+    });
+
+    socket.on("friend-request-rejected", () => {
+      loadRequests();
+    });
 
     socket.on("private-message", msg => {
       setMessages(prev => [...prev, msg]);
     });
 
     return () => {
+      socket.off("new-friend-request");
+      socket.off("friend-request-accepted");
+      socket.off("friend-request-rejected");
       socket.off("private-message");
     };
   }, []);
+
+  const acceptRequest = requestId => {
+    socket.emit("accept-friend-request", requestId);
+
+    setTimeout(() => {
+      loadFriends();
+      loadRequests();
+    }, 300);
+  };
+
+  const rejectRequest = requestId => {
+    socket.emit("reject-friend-request", requestId);
+
+    setTimeout(() => {
+      loadRequests();
+    }, 300);
+  };
 
   const send = image => {
     if (!activeFriend) return;
@@ -77,7 +123,47 @@ function Znajomi() {
   return (
     <div className="friendLayout">
       <div className="friendList">
-        <h2>Znajomi</h2>
+        <h2>Zaproszenia</h2>
+
+        {requests.length === 0 && (
+          <p style={{ marginTop: "15px", color: "#94a3b8" }}>
+            Brak zaproszeń
+          </p>
+        )}
+
+        {requests.map(request => (
+          <div key={request.id} className="friendItem">
+            <strong>{request.from.nick}</strong>
+
+            <p>
+              {request.from.name}, {request.from.age} lat
+            </p>
+
+            <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+              <button
+                className="green btn"
+                onClick={() => acceptRequest(request.id)}
+              >
+                Akceptuj
+              </button>
+
+              <button
+                className="red btn"
+                onClick={() => rejectRequest(request.id)}
+              >
+                Odrzuć
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <h2 style={{ marginTop: "30px" }}>Znajomi</h2>
+
+        {friends.length === 0 && (
+          <p style={{ marginTop: "15px", color: "#94a3b8" }}>
+            Brak znajomych
+          </p>
+        )}
 
         {friends.map(friend => (
           <div
@@ -127,7 +213,9 @@ function Znajomi() {
             />
           </label>
 
-          <button onClick={() => send("")}>Wyślij</button>
+          <button onClick={() => send("")}>
+            Wyślij
+          </button>
         </div>
       </div>
     </div>

@@ -136,10 +136,14 @@ function Rozmowy() {
   };
 
   const addFriend = () => {
-    if (!partner) {
-      alert("Najpierw połącz się z rozmówcą");
-      return;
-    }
+  if (!partner) {
+    alert("Najpierw połącz się z rozmówcą");
+    return;
+  }
+
+  socket.emit("send-friend-request", partner.id);
+  alert("Wysłano zaproszenie do znajomych");
+};
 
     socket.emit("add-friend", partner.id);
     alert("Dodano do znajomych");
@@ -276,6 +280,6 @@ function Rozmowy() {
       </div>
     </div>
   );
-}
+
 
 export default Rozmowy;

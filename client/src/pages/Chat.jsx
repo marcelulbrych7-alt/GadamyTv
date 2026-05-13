@@ -68,11 +68,14 @@ function Chat() {
   };
 
   const addFriend = () => {
-    if (!partner) return;
-    socket.emit("add-friend", partner.id);
-    alert("Dodano do znajomych");
-  };
+  if (!partner) {
+    alert("Najpierw połącz się z rozmówcą");
+    return;
+  }
 
+  socket.emit("send-friend-request", partner.id);
+  alert("Wysłano zaproszenie do znajomych");
+};
   const next = () => {
     socket.emit("next", "chat");
   };

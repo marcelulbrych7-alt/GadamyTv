@@ -24,6 +24,7 @@ const DB_FILE = "./data.json";
 let db = {
   users: [],
   friends: {},
+  friendRequests: [],
   history: [],
   privateMessages: []
 };
@@ -129,6 +130,24 @@ app.get("/api/friends", (req, res) => {
     .map(publicUser);
 
   res.json(friends);
+});
+
+app.get("/api/friend-requests", (req, res) => {
+  const token = req.headers.authorization;
+
+  const requests = db.friendRequests
+    .filter(r => r.to === token && r.status === "pending")
+    .map(r => {
+      const fromUser = db.users.find(u => u.id === r.from);
+
+      return {
+        id: r.id,
+        from: publicUser(fromUser),
+        date: r.date
+      };
+    });
+
+  res.json(requests);
 });
 
 app.get("/api/private/:friendId", (req, res) => {
@@ -303,31 +322,118 @@ io.on("connection", socket => {
     }
   });
 
-  socket.on("add-friend", friendId => {
-    const user = getUserFromSocket(socket);
+socket.on("send-friend-request", friendId => {
+  const user = getUserFromSocket(socket);
 
-    if (!user || !friendId) return;
+  if (!user || !friendId) return;
 
-    if (!db.friends[user.id]) {
-      db.friends[user.id] = [];
-    }
+  if (user.id === friendId) return;
 
-    if (!db.friends[friendId]) {
-      db.friends[friendId] = [];
-    }
+  const alreadyFriends =
+    db.friends[user.id]?.includes(friendId);
 
-    if (!db.friends[user.id].includes(friendId)) {
-      db.friends[user.id].push(friendId);
-    }
+  if (alreadyFriends) {
+    socket.emit("friend-request-error", "Już jesteście znajomymi");
+    return;
+  }
 
-    if (!db.friends[friendId].includes(user.id)) {
-      db.friends[friendId].push(user.id);
-    }
+  const existingRequest = db.friendRequests.find(r =>
+    r.from === user.id &&
+    r.to === friendId &&
+    r.status === "pending"
+  );
 
-    saveDB();
+  if (existingRequest) {
+    socket.emit("friend-request-error", "Zaproszenie już zostało wysłane");
+    return;
+  }
 
-    socket.emit("friend-added");
-  });
+  const request = {
+    id: makeId(),
+    from: user.id,
+    to: friendId,
+    status: "pending",
+    date: new Date().toISOString()
+  };
+
+  db.friendRequests.push(request);
+  saveDB();
+
+  socket.emit("friend-request-sent");
+
+  const receiverSocket = onlineUsers[friendId];
+
+  if (receiverSocket) {
+    io.to(receiverSocket).emit("new-friend-request", {
+      id: request.id,
+      from: publicUser(user),
+      date: request.date
+    });
+  }
+});
+
+
+socket.on("accept-friend-request", requestId => {
+  const user = getUserFromSocket(socket);
+
+  if (!user) return;
+
+  const request = db.friendRequests.find(r =>
+    r.id === requestId &&
+    r.to === user.id &&
+    r.status === "pending"
+  );
+
+  if (!request) return;
+
+  request.status = "accepted";
+
+  if (!db.friends[user.id]) {
+    db.friends[user.id] = [];
+  }
+
+  if (!db.friends[request.from]) {
+    db.friends[request.from] = [];
+  }
+
+  if (!db.friends[user.id].includes(request.from)) {
+    db.friends[user.id].push(request.from);
+  }
+
+  if (!db.friends[request.from].includes(user.id)) {
+    db.friends[request.from].push(user.id);
+  }
+
+  saveDB();
+
+  socket.emit("friend-request-accepted");
+
+  const senderSocket = onlineUsers[request.from];
+
+  if (senderSocket) {
+    io.to(senderSocket).emit("friend-request-accepted");
+  }
+});
+
+
+socket.on("reject-friend-request", requestId => {
+  const user = getUserFromSocket(socket);
+
+  if (!user) return;
+
+  const request = db.friendRequests.find(r =>
+    r.id === requestId &&
+    r.to === user.id &&
+    r.status === "pending"
+  );
+
+  if (!request) return;
+
+  request.status = "rejected";
+  saveDB();
+
+  socket.emit("friend-request-rejected");
+});
 
   socket.on("private-message", data => {
     const user = getUserFromSocket(socket);
