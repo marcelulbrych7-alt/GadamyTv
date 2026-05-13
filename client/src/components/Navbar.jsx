@@ -11,6 +11,11 @@ function Navbar() {
     user = null;
   }
 
+  const canSeeAdmin =
+    user?.role === "support" ||
+    user?.role === "admin" ||
+    user?.role === "owner";
+
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -24,7 +29,9 @@ function Navbar() {
         <Link to="/">Rozmowy</Link>
         <Link to="/chat">Chat</Link>
         <Link to="/historia">Historia</Link>
-        
+        <Link to="/profil">Profil</Link>
+
+        {canSeeAdmin && <Link to="/admin">Admin</Link>}
       </div>
 
       <div className="logo">Gadamy.TV</div>
@@ -32,8 +39,13 @@ function Navbar() {
       <div className="authButtons">
         {user ? (
           <>
-            <span className="userBadge">{user.nick}</span>
-            <button onClick={logout}>Wyloguj</button>
+            <span className={`userBadge role-${user.role}`}>
+              {user.nick} • {user.role}
+            </span>
+
+            <button onClick={logout}>
+              Wyloguj
+            </button>
           </>
         ) : (
           <>

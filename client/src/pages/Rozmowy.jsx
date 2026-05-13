@@ -39,11 +39,7 @@ function Rozmowy() {
     if (!streamRef.current) return;
 
     const peer = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: "stun:stun.l.google.com:19302"
-        }
-      ]
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
     });
 
     peerRef.current = peer;
@@ -82,15 +78,22 @@ function Rozmowy() {
       return;
     }
 
-    connectSocket();
-
     if (!streamRef.current) {
       const stream = await startCamera();
       if (!stream) return;
     }
 
+    connectSocket();
+
     setStatus("Szukanie aktywnej osoby...");
-    socket.emit("find-video");
+
+    if (socket.connected) {
+      socket.emit("find-video");
+    } else {
+      socket.once("connect", () => {
+        socket.emit("find-video");
+      });
+    }
   };
 
   const next = () => {
@@ -106,7 +109,6 @@ function Rozmowy() {
     setPartner(null);
     setStatus("Szukanie nowej osoby...");
     socket.emit("next", "video");
-    socket.emit("find-video");
   };
 
   const stop = () => {
@@ -133,6 +135,25 @@ function Rozmowy() {
 
     socket.emit("send-friend-request", partner.id);
     alert("Wysłano zaproszenie do znajomych");
+  };
+
+  const reportUser = () => {
+    if (!partner) {
+      alert("Najpierw połącz się z rozmówcą");
+      return;
+    }
+
+    const reason = prompt("Powód zgłoszenia:");
+
+    if (!reason) return;
+
+    socket.emit("report-user", {
+      targetId: partner.id,
+      reason,
+      type: "video"
+    });
+
+    alert("Wysłano zgłoszenie");
   };
 
   useEffect(() => {
@@ -170,9 +191,7 @@ function Rozmowy() {
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
 
-          socket.emit("webrtc-signal", {
-            answer
-          });
+          socket.emit("webrtc-signal", { answer });
         }
 
         if (data.answer) {
@@ -214,9 +233,10 @@ function Rozmowy() {
   }, []);
 
   return (
-    <div className="page">
-      <h1 className="title">Rozmowy Video</h1>
+    <div className="page heroPage">
+      <div className="heroGlow"></div>
 
+      <h1 className="title">Rozmowy Video</h1>
       <p className="status">{status}</p>
 
       <div className="buttons">
@@ -225,10 +245,10 @@ function Rozmowy() {
         </button>
       </div>
 
-      <div className="videoWrapper">
+      <div className="videoWrapper bigVideos">
         <div className="videoCard">
           <div className="videoLabel">
-            {partner ? partner.nick : "Losowy użytkownik"}
+            {partner ? `${partner.nick} • ${partner.age} lat` : "Losowy użytkownik"}
           </div>
 
           <div className="videoBox">
@@ -248,6 +268,10 @@ function Rozmowy() {
       <div className="buttons">
         <button className="green" onClick={addFriend}>
           Dodaj znajomego
+        </button>
+
+        <button className="dark" onClick={reportUser}>
+          Zgłoś
         </button>
 
         <button className="red" onClick={stop}>

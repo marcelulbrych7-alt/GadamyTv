@@ -8,7 +8,8 @@ import Historia from "./pages/Historia";
 import Znajomi from "./pages/Znajomi";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-
+import Admin from "./pages/Admin";
+import Profil from "./pages/Profil";
 
 function App() {
   return (
@@ -22,7 +23,8 @@ function App() {
         <Route path="/znajomi" element={<Znajomi />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/profil" element={<Profil />} />
       </Routes>
     </BrowserRouter>
   );

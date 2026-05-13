@@ -1,334 +1,128 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.heroPage {
+  position: relative;
+  overflow: hidden;
 }
 
-body {
-  background: #0f172a;
-  color: white;
-  font-family: Arial, sans-serif;
+.heroGlow {
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(56,189,248,0.25), transparent 70%);
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
-a {
-  color: white;
-  text-decoration: none;
+.bigVideos .videoCard {
+  width: 720px;
 }
 
-button {
-  cursor: pointer;
-}
-
-.navbar {
-  background: #020617;
-  min-height: 90px;
-  padding: 18px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 25px;
-  flex-wrap: wrap;
-  border-bottom: 2px solid #1e293b;
-}
-
-.logo {
-  font-size: 34px;
-  font-weight: 900;
-  color: #38bdf8;
-}
-
-.navLinks,
-.authButtons {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.navLinks a,
-.authButtons a,
-.authButtons button,
-.userBadge {
-  background: #1e293b;
-  padding: 11px 16px;
-  border-radius: 12px;
-  border: none;
-  color: white;
-}
-
-.page {
-  min-height: calc(100vh - 90px);
-  padding: 30px;
-}
-
-.title {
-  text-align: center;
-  font-size: 42px;
-  margin-bottom: 25px;
-}
-
-.status {
-  text-align: center;
-  margin-bottom: 25px;
-  color: #93c5fd;
-}
-
-.videoWrapper {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  flex-wrap: wrap;
-}
-
-.videoCard {
-  width: 600px;
-  max-width: 100%;
-}
-
-.videoLabel {
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: #cbd5e1;
-}
-
-.videoBox,
-.videoBox video {
-  width: 100%;
-  height: 420px;
-  background: black;
-  border-radius: 22px;
-  object-fit: cover;
-  border: 3px solid #1e293b;
-}
-
-.emptyVideo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #94a3b8;
-}
-
-.buttons {
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-  margin-top: 30px;
-  flex-wrap: wrap;
-}
-
-.buttons button,
-.btn {
-  border: none;
-  color: white;
-  padding: 14px 24px;
-  border-radius: 14px;
-  font-size: 16px;
-}
-
-.green {
-  background: #16a34a;
-}
-
-.red {
-  background: #dc2626;
-}
-
-.blue {
-  background: #2563eb;
+.bigVideos .videoBox,
+.bigVideos .videoBox video {
+  height: 500px;
 }
 
 .dark {
+  background: #334155;
+}
+
+.userBadge {
   background: #1e293b;
+  color: white;
+  padding: 11px 16px;
+  border-radius: 12px;
 }
 
-.chatLayout {
-  min-height: calc(100vh - 90px);
-  display: flex;
+.role-owner {
+  background: linear-gradient(135deg, #f97316, #dc2626);
 }
 
-.leftPanel {
-  width: 330px;
+.role-admin {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.role-support {
+  background: linear-gradient(135deg, #16a34a, #0f766e);
+}
+
+.adminPage {
+  background:
+    radial-gradient(circle at top left, rgba(56,189,248,0.15), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(168,85,247,0.14), transparent 35%),
+    #0f172a;
+}
+
+.adminGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.adminItem {
   background: #020617;
-  padding: 25px;
-  border-right: 2px solid #1e293b;
-}
-
-.profileBox {
-  background: #1e293b;
   padding: 18px;
   border-radius: 16px;
-  margin-top: 20px;
-  line-height: 1.8;
+  margin-top: 15px;
+  border: 1px solid #1e293b;
 }
 
-.chatPanel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.smallButtons {
+  justify-content: flex-start;
+  margin-top: 15px;
 }
 
-.messages {
-  padding: 25px;
-  overflow-y: auto;
+.smallButtons button {
+  padding: 10px 14px;
+  font-size: 14px;
 }
 
-.message {
-  width: fit-content;
-  max-width: 460px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  margin-bottom: 14px;
-  word-break: break-word;
+.profilePage {
+  background:
+    linear-gradient(135deg, rgba(37,99,235,0.15), transparent),
+    #0f172a;
 }
 
-.other {
-  background: #1e293b;
-}
-
-.me {
-  background: #2563eb;
-  margin-left: auto;
-}
-
-.message img {
-  max-width: 240px;
-  border-radius: 14px;
-  display: block;
-  margin-top: 8px;
-}
-
-.bottomBar {
-  display: flex;
-  gap: 12px;
-  padding: 18px;
-  border-top: 2px solid #1e293b;
-}
-
-.bottomBar input {
-  flex: 1;
-  background: #1e293b;
-  color: white;
-  border: none;
-  padding: 16px;
-  border-radius: 14px;
-}
-
-.bottomBar button,
-.bottomBar label {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 14px 18px;
-  border-radius: 14px;
-}
-
-.card {
-  background: #1e293b;
-  padding: 22px;
-  border-radius: 18px;
-  margin: 16px auto;
+.profileHero {
   max-width: 900px;
+  margin: 0 auto 25px auto;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 24px;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
 }
 
-.authPage {
-  min-height: calc(100vh - 90px);
+.avatarBig {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #7c3aed);
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 25px;
-}
-
-.authBox {
-  width: 420px;
-  max-width: 100%;
-  background: #020617;
-  padding: 35px;
-  border-radius: 22px;
-  border: 2px solid #1e293b;
-}
-
-.authBox h1 {
-  margin-bottom: 22px;
-}
-
-.authBox input {
-  width: 100%;
-  background: #1e293b;
-  border: none;
-  color: white;
-  padding: 16px;
-  border-radius: 13px;
-  margin-bottom: 15px;
-}
-
-.authBox button {
-  width: 100%;
-  background: #2563eb;
-  border: none;
-  color: white;
-  padding: 16px;
-  border-radius: 13px;
-}
-
-.friendLayout {
-  display: flex;
-  min-height: calc(100vh - 90px);
-}
-
-.friendList {
-  width: 300px;
-  background: #020617;
-  border-right: 2px solid #1e293b;
-  padding: 20px;
-}
-
-.friendItem {
-  background: #1e293b;
-  padding: 15px;
-  border-radius: 14px;
-  margin-top: 12px;
-  cursor: pointer;
+  font-size: 46px;
+  font-weight: bold;
 }
 
 @media (max-width: 900px) {
-  .navbar {
-    justify-content: center;
-  }
-
-  .logo {
-    order: -1;
+  .bigVideos .videoCard {
     width: 100%;
-    text-align: center;
   }
 
-  .title {
-    font-size: 30px;
+  .bigVideos .videoBox,
+  .bigVideos .videoBox video {
+    height: 320px;
   }
 
-  .videoBox,
-  .videoBox video {
-    height: 260px;
+  .adminGrid {
+    grid-template-columns: 1fr;
   }
 
-  .chatLayout,
-  .friendLayout {
+  .profileHero {
     flex-direction: column;
-  }
-
-  .leftPanel,
-  .friendList {
-    width: 100%;
-    border-right: none;
-    border-bottom: 2px solid #1e293b;
-  }
-
-  .bottomBar {
-    flex-wrap: wrap;
-  }
-
-  .bottomBar input {
-    width: 100%;
-    flex-basis: 100%;
+    text-align: center;
   }
 }
