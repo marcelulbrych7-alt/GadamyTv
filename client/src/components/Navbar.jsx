@@ -28,10 +28,10 @@ function Navbar() {
       <Logo />
 
       <div className="navLinks">
-        <Link to="/znajomi">Znajomi</Link>
         <Link to="/">Rozmowy</Link>
         <Link to="/chat">Chat</Link>
         <Link to="/historia">Historia</Link>
+        <Link to="/znajomi">Znajomi</Link>
         <Link to="/profil">Profil</Link>
 
         {canSeeAdmin && <Link to="/admin">Admin</Link>}
