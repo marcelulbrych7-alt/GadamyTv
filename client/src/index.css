@@ -149,16 +149,19 @@ button {
 /* VIDEO */
 
 .videoWrapper {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 30px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  width: 100%;
+  max-width: 1500px;
+
+  margin: 0 auto;
 }
 
 .videoCard {
-  width: 680px;
-  max-width: 100%;
+  width: 100%;
+  min-width: 0;
 }
 
 .videoLabel {
@@ -169,11 +172,16 @@ button {
 
 .videoBox {
   width: 100%;
-  height: 460px;
+
+  height: min(34vw, 520px);
+  min-height: 260px;
+
   background: black;
   border-radius: 22px;
   overflow: hidden;
+
   border: 3px solid #1e293b;
+
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
 }
 
@@ -451,8 +459,14 @@ button {
     font-size: 30px;
   }
 
+  .videoWrapper {
+    gap: 12px;
+  }
+
   .videoBox {
-    height: 320px;
+    height: 45vw;
+    max-height: 320px;
+    min-height: 190px;
   }
 
   .chatLayout,
