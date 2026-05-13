@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import Logo from "./Logo";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ function Navbar() {
 
   return (
     <div className="navbar">
+      <Logo />
+
       <div className="navLinks">
         <Link to="/znajomi">Znajomi</Link>
         <Link to="/">Rozmowy</Link>
@@ -33,8 +36,6 @@ function Navbar() {
 
         {canSeeAdmin && <Link to="/admin">Admin</Link>}
       </div>
-
-      <div className="logo">Gadamy.TV</div>
 
       <div className="authButtons">
         {user ? (
