@@ -65,7 +65,13 @@ function publicUser(user) {
     nick: user.nick,
     name: user.name,
     age: user.age,
-    role: user.role || "user"
+    gender: user.gender || "brak",
+    country: user.country || "brak",
+    role: user.role || "user",
+    avatar: user.avatar || "",
+    bio: user.bio || "",
+    socials: user.socials || {},
+    achievements: user.achievements || []
   };
 }
 
