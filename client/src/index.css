@@ -151,7 +151,7 @@ button {
   margin-bottom: 25px;
 }
 
-/* ŁADNY PANEL KRAJU I PŁCI */
+/* FILTERS */
 
 .prettyFilterPanel {
   max-width: 1050px;
@@ -234,19 +234,33 @@ button {
 }
 
 /* VIDEO */
+/* WAŻNE:
+   Desktop: Twoja kamerka jest po lewej, rozmówca po prawej.
+   Telefon: Twoja kamerka jest u góry, rozmówca pod spodem.
+*/
 
 .videoWrapper {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: 24px;
   width: 100%;
   max-width: 1500px;
   margin: 0 auto;
+  align-items: start;
 }
 
 .videoCard {
   width: 100%;
   min-width: 0;
+}
+
+.videoCard:first-child {
+  order: 1;
+}
+
+.videoCard:nth-child(2) {
+  order: 2;
 }
 
 .videoLabel {
@@ -273,7 +287,7 @@ button {
   object-fit: cover;
 }
 
-/* GRAFIKI W KAMERKACH */
+/* PLACEHOLDERS */
 
 .myCameraPlaceholder,
 .partnerWaitingGraphic {
@@ -373,7 +387,7 @@ button {
   }
 }
 
-/* MIKROFON POD TWOJĄ KAMERKĄ */
+/* MICROPHONE */
 
 .microphonePanel {
   margin-top: 16px;
@@ -1005,7 +1019,7 @@ button {
   }
 
   .page {
-    padding: 18px;
+    padding: 14px;
   }
 
   .title {
@@ -1015,6 +1029,7 @@ button {
   .prettyFilterPanel {
     grid-template-columns: 1fr;
     padding: 16px;
+    margin-bottom: 18px;
   }
 
   .filterControls {
@@ -1042,23 +1057,41 @@ button {
     font-size: 12px;
   }
 
+  /* TELEFON:
+     kamerki jedna pod drugą,
+     Twoja kamera zawsze pierwsza/u góry,
+     rozmówca zawsze drugi/pod spodem.
+  */
+
   .videoWrapper {
-    gap: 12px;
+    grid-template-columns: 1fr;
+    grid-auto-flow: row;
+    gap: 18px;
+    max-width: 100%;
+  }
+
+  .videoCard:first-child {
+    order: 1;
+  }
+
+  .videoCard:nth-child(2) {
+    order: 2;
   }
 
   .videoBox {
-    height: 45vw;
-    max-height: 320px;
-    min-height: 190px;
-    border-radius: 16px;
+    height: 62vw;
+    max-height: none;
+    min-height: 310px;
+    border-radius: 18px;
   }
 
   .videoLabel {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .microphonePanel {
-    padding: 12px;
+    padding: 14px;
+    border-radius: 18px;
   }
 
   .micVisual {
@@ -1080,8 +1113,8 @@ button {
   }
 
   .microphonePanel select {
-    font-size: 12px;
-    padding: 12px;
+    font-size: 13px;
+    padding: 13px;
   }
 
   .chatLayout,
@@ -1128,16 +1161,16 @@ button {
 
   .placeholderBigIcon,
   .partnerGraphicIcon {
-    font-size: 38px;
+    font-size: 44px;
   }
 
   .myCameraPlaceholder h3,
   .partnerWaitingGraphic h3 {
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .myCameraPlaceholder p,
   .partnerWaitingGraphic p {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
