@@ -130,6 +130,14 @@ button {
     #0f172a;
 }
 
+.rozmowyPage {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.18), transparent 32%),
+    radial-gradient(circle at 85% 20%, rgba(124, 58, 237, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 90%, rgba(249, 115, 22, 0.10), transparent 26%),
+    #0f172a;
+}
+
 .title {
   text-align: center;
   font-size: 44px;
@@ -143,7 +151,64 @@ button {
   margin-bottom: 25px;
 }
 
+/* FILTERS */
+
+.matchFilters {
+  max-width: 900px;
+  margin: 0 auto 25px auto;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.filterCard {
+  background: rgba(2, 6, 23, 0.76);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  padding: 16px;
+
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.24);
+}
+
+.filterCard span {
+  display: block;
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.filterCard select {
+  width: 100%;
+  background: linear-gradient(135deg, #1e293b, #111827);
+  color: white;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: bold;
+  outline: none;
+}
+
+.filterCard select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
 /* VIDEO */
+
+.topVideoButtons {
+  margin-bottom: 26px;
+}
+
+.mainStartButton {
+  padding: 17px 38px !important;
+  font-size: 18px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+  box-shadow: 0 15px 45px rgba(37, 99, 235, 0.35);
+}
 
 .videoWrapper {
   display: grid;
@@ -163,7 +228,8 @@ button {
 .videoLabel {
   margin-bottom: 10px;
   font-weight: bold;
-  color: #cbd5e1;
+  color: #e2e8f0;
+  font-size: 18px;
 }
 
 .videoBox {
@@ -172,9 +238,9 @@ button {
   min-height: 260px;
 
   background: black;
-  border-radius: 22px;
+  border-radius: 24px;
   overflow: hidden;
-  border: 3px solid #1e293b;
+  border: 3px solid rgba(30, 41, 59, 0.95);
 
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
 }
@@ -183,6 +249,123 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.videoPlaceholder {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.24), transparent 35%),
+    radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.26), transparent 40%),
+    linear-gradient(135deg, #020617, #111827);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.partnerPlaceholder {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(56, 189, 248, 0.24), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(249, 115, 22, 0.20), transparent 35%),
+    linear-gradient(135deg, #020617, #1e1b4b);
+}
+
+.placeholderIcon {
+  font-size: 60px;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 2;
+}
+
+.videoPlaceholder h3 {
+  font-size: 26px;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.videoPlaceholder p {
+  color: #cbd5e1;
+  max-width: 360px;
+  line-height: 1.5;
+  position: relative;
+  z-index: 2;
+}
+
+.placeholderPulse {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.14);
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.25;
+  }
+
+  100% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+}
+
+/* MICROPHONE PANEL */
+
+.micPanel {
+  margin-top: 14px;
+  background: rgba(2, 6, 23, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  padding: 16px;
+
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 14px;
+  align-items: center;
+
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+}
+
+.micPanel strong {
+  font-size: 16px;
+}
+
+.micPanel p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.micPanel select {
+  width: 100%;
+  background: linear-gradient(135deg, #1e293b, #111827);
+  color: white;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: bold;
+  outline: none;
+}
+
+.micPanel select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
 }
 
 /* BUTTONS */
@@ -773,6 +956,24 @@ button {
     font-size: 30px;
   }
 
+  .matchFilters {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .filterCard {
+    padding: 12px;
+  }
+
+  .filterCard span {
+    font-size: 12px;
+  }
+
+  .filterCard select {
+    padding: 12px;
+    font-size: 12px;
+  }
+
   .videoWrapper {
     gap: 12px;
   }
@@ -781,6 +982,20 @@ button {
     height: 45vw;
     max-height: 320px;
     min-height: 190px;
+    border-radius: 16px;
+  }
+
+  .videoLabel {
+    font-size: 14px;
+  }
+
+  .micPanel {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .micPanel select {
+    font-size: 12px;
   }
 
   .chatLayout,
@@ -823,5 +1038,17 @@ button {
   .chatImage,
   .chatVideo {
     max-width: 220px;
+  }
+
+  .placeholderIcon {
+    font-size: 38px;
+  }
+
+  .videoPlaceholder h3 {
+    font-size: 18px;
+  }
+
+  .videoPlaceholder p {
+    font-size: 12px;
   }
 }

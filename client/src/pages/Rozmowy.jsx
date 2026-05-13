@@ -10,6 +10,8 @@ function Rozmowy() {
   const [status, setStatus] = useState("Kliknij Start, aby rozpocząć");
   const [partner, setPartner] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [activeUsers, setActiveUsers] = useState(0);
 
   const [filterCountry, setFilterCountry] = useState("dowolny");
@@ -19,21 +21,39 @@ function Rozmowy() {
   const [selectedMic, setSelectedMic] = useState("");
 
   const loadDevices = async () => {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const mics = devices.filter(device => device.kind === "audioinput");
-    setMicrophones(mics);
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const mics = devices.filter(device => device.kind === "audioinput");
 
-    if (mics[0] && !selectedMic) {
-      setSelectedMic(mics[0].deviceId);
+      setMicrophones(mics);
+
+      if (mics[0] && !selectedMic) {
+        setSelectedMic(mics[0].deviceId);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const stopTracks = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
   };
 
   const startCamera = async () => {
     try {
+      stopTracks();
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: selectedMic
-          ? { deviceId: { exact: selectedMic } }
+          ? {
+              deviceId: {
+                exact: selectedMic
+              }
+            }
           : true
       });
 
@@ -60,7 +80,11 @@ function Rozmowy() {
     if (!streamRef.current) return;
 
     const peer = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302"
+        }
+      ]
     });
 
     peerRef.current = peer;
@@ -87,7 +111,9 @@ function Rozmowy() {
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
 
-      socket.emit("webrtc-signal", { offer });
+      socket.emit("webrtc-signal", {
+        offer
+      });
     }
   };
 
@@ -99,23 +125,27 @@ function Rozmowy() {
 
     if (!streamRef.current) {
       const stream = await startCamera();
+
       if (!stream) return;
     }
 
     connectSocket();
 
+    setSearching(true);
+    setConnected(false);
+    setPartner(null);
     setStatus("Szukanie aktywnej osoby...");
 
-    const data = {
+    const filters = {
       country: filterCountry,
       gender: filterGender
     };
 
     if (socket.connected) {
-      socket.emit("find-video", data);
+      socket.emit("find-video", filters);
     } else {
       socket.once("connect", () => {
-        socket.emit("find-video", data);
+        socket.emit("find-video", filters);
       });
     }
   };
@@ -131,13 +161,11 @@ function Rozmowy() {
     }
 
     setPartner(null);
+    setConnected(false);
+    setSearching(true);
     setStatus("Szukanie nowej osoby...");
 
-    socket.emit("next", {
-      type: "video",
-      country: filterCountry,
-      gender: filterGender
-    });
+    socket.emit("next", "video");
   };
 
   const stop = () => {
@@ -153,6 +181,8 @@ function Rozmowy() {
     }
 
     setPartner(null);
+    setSearching(false);
+    setConnected(false);
     setStatus("Zatrzymano rozmowę");
   };
 
@@ -185,6 +215,16 @@ function Rozmowy() {
     alert("Wysłano zgłoszenie");
   };
 
+  const changeMicrophone = async value => {
+    setSelectedMic(value);
+
+    if (cameraReady) {
+      setTimeout(() => {
+        startCamera();
+      }, 100);
+    }
+  };
+
   useEffect(() => {
     connectSocket();
     loadDevices();
@@ -194,10 +234,14 @@ function Rozmowy() {
     });
 
     socket.on("video-searching", () => {
+      setSearching(true);
+      setConnected(false);
       setStatus("Szukanie aktywnej osoby...");
     });
 
     socket.on("video-found", async data => {
+      setSearching(false);
+      setConnected(true);
       setStatus("Połączono");
       setPartner(data.partner);
 
@@ -220,18 +264,28 @@ function Rozmowy() {
         if (!peer) return;
 
         if (data.offer) {
-          await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
+          await peer.setRemoteDescription(
+            new RTCSessionDescription(data.offer)
+          );
+
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
-          socket.emit("webrtc-signal", { answer });
+
+          socket.emit("webrtc-signal", {
+            answer
+          });
         }
 
         if (data.answer) {
-          await peer.setRemoteDescription(new RTCSessionDescription(data.answer));
+          await peer.setRemoteDescription(
+            new RTCSessionDescription(data.answer)
+          );
         }
 
         if (data.candidate) {
-          await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+          await peer.addIceCandidate(
+            new RTCIceCandidate(data.candidate)
+          );
         }
       } catch (err) {
         console.log(err);
@@ -249,6 +303,8 @@ function Rozmowy() {
       }
 
       setPartner(null);
+      setConnected(false);
+      setSearching(false);
       setStatus("Rozmówca wyszedł");
     });
 
@@ -262,47 +318,45 @@ function Rozmowy() {
   }, []);
 
   return (
-    <div className="page">
-      <div className="particlesBg"></div>
-
-      <h1 className="title neonTitle">Rozmowy Video</h1>
+    <div className="page rozmowyPage">
+      <h1 className="title">Rozmowy Video</h1>
 
       <p className="status">{status}</p>
 
-      <div className="filterBar">
-        <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)}>
-          <option value="dowolny">Dowolny kraj</option>
-          <option value="Polska">Polska</option>
-          <option value="Niemcy">Niemcy</option>
-          <option value="Czechy">Czechy</option>
-          <option value="Ukraina">Ukraina</option>
-          <option value="USA">USA</option>
-        </select>
+      <div className="matchFilters">
+        <div className="filterCard">
+          <span>🌍 Kraj rozmówcy</span>
 
-        <select value={filterGender} onChange={e => setFilterGender(e.target.value)}>
-          <option value="dowolny">Dowolna płeć</option>
-          <option value="kobieta">Kobieta</option>
-          <option value="mezczyzna">Mężczyzna</option>
-          <option value="inna">Inna</option>
-        </select>
+          <select
+            value={filterCountry}
+            onChange={e => setFilterCountry(e.target.value)}
+          >
+            <option value="dowolny">Dowolny kraj</option>
+            <option value="Polska">Polska</option>
+            <option value="Niemcy">Niemcy</option>
+            <option value="Czechy">Czechy</option>
+            <option value="Ukraina">Ukraina</option>
+            <option value="USA">USA</option>
+          </select>
+        </div>
 
-        <select
-          className="deviceSelect"
-          value={selectedMic}
-          onChange={e => setSelectedMic(e.target.value)}
-        >
-          <option value="">Domyślny mikrofon</option>
+        <div className="filterCard">
+          <span>🧑 Płeć rozmówcy</span>
 
-          {microphones.map(mic => (
-            <option key={mic.deviceId} value={mic.deviceId}>
-              {mic.label || "Mikrofon"}
-            </option>
-          ))}
-        </select>
+          <select
+            value={filterGender}
+            onChange={e => setFilterGender(e.target.value)}
+          >
+            <option value="dowolny">Dowolna płeć</option>
+            <option value="kobieta">Kobieta</option>
+            <option value="mezczyzna">Mężczyzna</option>
+            <option value="inna">Inna</option>
+          </select>
+        </div>
       </div>
 
-      <div className="buttons">
-        <button className="blue" onClick={startSearching}>
+      <div className="buttons topVideoButtons">
+        <button className="blue mainStartButton" onClick={startSearching}>
           {cameraReady ? "Szukaj rozmówcy" : "Start kamerki"}
         </button>
       </div>
@@ -312,28 +366,86 @@ function Rozmowy() {
           <div className="videoLabel">Ty</div>
 
           <div className="videoBox">
-            <video ref={myVideo} autoPlay muted playsInline />
+            {cameraReady ? (
+              <video ref={myVideo} autoPlay muted playsInline />
+            ) : (
+              <div className="videoPlaceholder">
+                <div className="placeholderIcon">🎥</div>
+                <h3>Twoja kamera</h3>
+                <p>Kliknij Start kamerki, aby uruchomić podgląd.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="micPanel">
+            <div>
+              <strong>🎙️ Mikrofon</strong>
+              <p>Wybierz urządzenie audio</p>
+            </div>
+
+            <select
+              value={selectedMic}
+              onChange={e => changeMicrophone(e.target.value)}
+            >
+              <option value="">Domyślny mikrofon</option>
+
+              {microphones.map(mic => (
+                <option key={mic.deviceId} value={mic.deviceId}>
+                  {mic.label || "Mikrofon"}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         <div className="videoCard">
           <div className="videoLabel">
             {partner
-              ? `${partner.nick} • ${partner.age} lat • ${partner.country || "brak kraju"}`
+              ? `${partner.nick} • ${partner.age} lat`
               : "Losowy użytkownik"}
           </div>
 
           <div className="videoBox">
-            <video ref={partnerVideo} autoPlay playsInline />
+            {connected ? (
+              <video ref={partnerVideo} autoPlay playsInline />
+            ) : (
+              <div className="videoPlaceholder partnerPlaceholder">
+                <div className="placeholderPulse"></div>
+                <div className="placeholderIcon">✨</div>
+
+                <h3>
+                  {searching
+                    ? "Szukamy rozmówcy..."
+                    : "Gotowy na rozmowę?"}
+                </h3>
+
+                <p>
+                  {searching
+                    ? "Trwa losowanie aktywnej osoby online."
+                    : "Po kliknięciu Start pojawi się tutaj kamera rozmówcy."}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="buttons">
-        <button className="green" onClick={addFriend}>Dodaj znajomego</button>
-        <button className="dark" onClick={reportUser}>Zgłoś</button>
-        <button className="red" onClick={stop}>Stop</button>
-        <button className="blue" onClick={next}>Dalej</button>
+        <button className="green" onClick={addFriend}>
+          Dodaj znajomego
+        </button>
+
+        <button className="dark" onClick={reportUser}>
+          Zgłoś
+        </button>
+
+        <button className="red" onClick={stop}>
+          Stop
+        </button>
+
+        <button className="blue" onClick={next}>
+          Dalej
+        </button>
       </div>
 
       <div className="activeUsersBox">
